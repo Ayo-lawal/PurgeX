@@ -1,45 +1,61 @@
 # PurgeX (Twitter/X Timeline Cleaner)
 
-A small script to help you clean your Twitter/X timeline with a targeted approach:
-- Unretweet tweets you have retweeted
-- Delete your own quote/attached tweets (quote tweets or embedded retweets)
-- Preserve original personal tweets
+PurgeX is a personal browser script for targeted cleanup of your own account:
+- Unretweets retweets in your timeline.
+- Deletes your own quote/attached tweets (quote tweets or embedded retweets).
+- Keeps your original tweets untouched.
 
-> WARNING: This is automation script for personal use only. Use carefully. You run it in your browser console at your own risk.
+> WARNING: This is an automation script for personal use only. You are responsible for running it and accepting the risk. Undo is not possible once action is confirmed.
 
-## 🗂️ Structure
-- `unretweet-delete-quote.js` — main browser script
-- `README.md` — this file
-- `.gitignore` — ignored files
+## 🗂️ Repository layout
+- `unretweet-delete-quote.js` — main script to execute in your browser console.
+- `README.md` — usage guide and behavior notes.
+- `.gitignore` — standard ignore file (safe to commit publicly).
 
-## 🚀 Usage
-1. Sign in to Twitter/X and open your timeline.
-2. Open DevTools (F12/Ctrl+Shift+I).
-3. Paste the content of `unretweet-delete-quote.js` into the Console.
-4. Press Enter.
+## 🎯 Usage (recommended pages)
+1. Sign in to Twitter/X in browser.
+2. Open your profile page:
+   - Posts & retweets: `https://x.com/YOUR_USERNAME`
+   - Replies: `https://x.com/YOUR_USERNAME/with_replies`
+   - Likes (if enabling unlike in script): `https://x.com/YOUR_USERNAME/likes`
+3. Open DevTools console (F12 / Ctrl+Shift+I / Cmd+Option+I).
+4. Paste `unretweet-delete-quote.js` content and press Enter.
+5. If profile page has many tweets, let script auto-scroll and process until done.
+6. Repeat manually for different profile sections if needed.
 
-### Dry run recommendation
-Modify `processTweet` logging only:
-- Keep `console.log` statements
-- Run first to verify classification
-- Ensure the script is not deleting anything you did not intend
+### 🔎 Important precautions
+- Run a dry run first by observing console logs and verifying classification behavior.
+- Make sure you are on your own profile page before running.
+- Never use the script on someone else’s feed.
 
-## 🛡️ How it selects tweets
-- `isOwnTweet`: If author handle equals your logged in handle.
-- `isRetweet`: If the tweet has an “unretweet” button.
-- `isQuoteOrAttached`: If tweet has nested `article[data-testid="tweet"]` or includes phrase "quote tweet"/"quoted tweet".
+## 🛡️ Filtering behavior
+- `isOwnTweet`: checks author handle matches your logged-in profile.
+- `isRetweet`: checks for `unretweet` button presence.
+- `isQuoteOrAttached`: checks for nested tweet cards or quote-text terms in tweet content.
 
-Action logic:
-1. Retweets → unretweet
-2. Own quote/attached → delete
-3. All others → no action
+### Action sequence
+1. If tweet is retweeted by you → unretweet.
+2. If the tweet is your own and quote/attached form → delete.
+3. Else → skip.
+
+## 📌 Why this is your own version
+This repo is a refactor and feature-focused version based on similar workflow patterns seen in X bulk-clean scripts. It is designed to be:
+- safer (avoid unliking everything by default),
+- focused on your own quote-style posts,
+- easy to verify with logging, and
+- configurable for keyword/date range filters if you add those.
 
 ## 🔁 Limitations
-- Twitter/X may change markup; selectors may break.
-- No retries for failed click actions.
-- Only processes currently visible timeline tweets and loads more by scrolling.
+- X markup can change anytime (selectors can break).
+- No built-in undo.
+- Requires an active browser session on your profile.
+- Large timelines may need long runtime due to scrolling and delays.
 
-## 🧩 Optional improvements
-- Add keyword filters (e.g., only tweets containing certain words).
-- Add date range filtering via `time` element parsing.
-- Add batching or explicit pause config to reduce rate risk.
+## 🧩 Extension ideas
+- Add keyword whitelist/blacklist.
+- Add date range window (by reading `time[datetime]`).
+- Add options in script root configuration variables.
+- Add a second mode for “likes/unlike” with explicit opt-in.
+
+## 📍 Credit
+Inspired by community scripts for bulk cleanup, adapted to a custom workflow (own-source behavior, safe-by-design, no cross-user destructive actions).
