@@ -56,6 +56,3 @@ This repo is a refactor and feature-focused version based on similar workflow pa
 - Add date range window (by reading `time[datetime]`).
 - Add options in script root configuration variables.
 - Add a second mode for “likes/unlike” with explicit opt-in.
-
-## 📍 Credit
-Inspired by community scripts for bulk cleanup, adapted to a custom workflow (own-source behavior, safe-by-design, no cross-user destructive actions).
