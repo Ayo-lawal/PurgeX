@@ -45,6 +45,12 @@ Pasting the script into DevTools opens a PurgeX panel instead of immediately sca
 
 The panel writes progress status on the page, while detailed matches and summaries are printed in the browser console. Use Preview visible before Run when tuning filters.
 
+## Logged-in session and account handle
+
+PurgeX runs inside your logged-in X/Twitter browser session. That means unlike and unretweet actions use the buttons X already shows for the signed-in account; they do not need your username.
+
+Delete is different because it is irreversible. For live delete runs, PurgeX requires `accountHandle` explicitly so it can confirm a visible tweet belongs to your account before clicking delete. The script may infer a handle from profile URLs like `x.com/YOUR_USERNAME`, but live delete still uses the explicit account-handle safety lock by default.
+
 ## Safety defaults
 
 The script defaults to:
@@ -243,7 +249,7 @@ The console-paste and userscript workflows are more reliable than the bookmarkle
 
 ## Verification
 
-Run the pure filter/action tests with. These tests cover the shared core used by both the browser panel and the cleanup runner:
+Run the pure filter/action tests. These tests cover the shared core used by both the browser panel and the cleanup runner:
 
 ```powershell
 node tests\purgex-core.test.js
@@ -260,6 +266,7 @@ Run a syntax check with:
 ```powershell
 node --check unretweet-delete-quote.js
 ```
+
 ## Limitations
 
 - X markup can change at any time, which can break selectors.
