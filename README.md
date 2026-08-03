@@ -1,58 +1,234 @@
 # PurgeX (Twitter/X Timeline Cleaner)
 
-PurgeX is a personal browser script for targeted cleanup of your own account:
-- Unretweets retweets in your timeline.
-- Deletes your own quote/attached tweets (quote tweets or embedded retweets).
-- Keeps your original tweets untouched.
+PurgeX is a personal browser-console script for targeted cleanup of your own account activity on X/Twitter.
 
-> WARNING: This is an automation script for personal use only. You are responsible for running it and accepting the risk. Undo is not possible once action is confirmed.
+It can be configured to:
+- Unlike matched liked posts.
+- Unretweet matched retweets.
+- Delete matched tweets from your own account.
+- Filter by exact day, date range, keyword, hashtag, author, and tweet type.
 
-## 🗂️ Repository layout
-- `unretweet-delete-quote.js` — main script to execute in your browser console.
-- `README.md` — usage guide and behavior notes.
-- `.gitignore` — standard ignore file (safe to commit publicly).
+> WARNING: This script can perform irreversible actions when `dryRun` is set to `false`. Always run with `dryRun: true` first and inspect the console output before live execution.
 
-## 🎯 Usage (recommended pages)
-1. Sign in to Twitter/X in browser.
-2. Open your profile page:
-   - Posts & retweets: `https://x.com/YOUR_USERNAME`
-   - Replies: `https://x.com/YOUR_USERNAME/with_replies`
-   - Likes (if enabling unlike in script): `https://x.com/YOUR_USERNAME/likes`
-3. Open DevTools console (F12 / Ctrl+Shift+I / Cmd+Option+I).
-4. Paste `unretweet-delete-quote.js` content and press Enter.
-5. If profile page has many tweets, let script auto-scroll and process until done.
-6. Repeat manually for different profile sections if needed.
+## Repository layout
 
-### 🔎 Important precautions
-- Run a dry run first by observing console logs and verifying classification behavior.
-- Make sure you are on your own profile page before running.
-- Never use the script on someone else’s feed.
+- `unretweet-delete-quote.js` - main browser-console script.
+- `README.md` - usage guide and behavior notes.
+- `.gitignore` - local ignore rules.
 
-## 🛡️ Filtering behavior
-- `isOwnTweet`: checks author handle matches your logged-in profile.
-- `isRetweet`: checks for `unretweet` button presence.
-- `isQuoteOrAttached`: checks for nested tweet cards or quote-text terms in tweet content.
+## Usage
 
-### Action sequence
-1. If tweet is retweeted by you → unretweet.
-2. If the tweet is your own and quote/attached form → delete.
-3. Else → skip.
+1. Sign in to X/Twitter in your browser.
+2. Open the timeline you want to process:
+   - Own posts and retweets: `https://x.com/YOUR_USERNAME`
+   - Own replies: `https://x.com/YOUR_USERNAME/with_replies`
+   - Likes: `https://x.com/YOUR_USERNAME/likes`
+3. Open DevTools Console.
+4. Paste the script into the console and press Enter.
+5. Use the PurgeX panel that appears in the top-right of the page.
+6. Choose actions, filters, max actions, and account handle if deleting.
+7. Click Run with Dry run enabled first.
+8. Review the dry-run console tables.
+9. Only after the matches look correct, uncheck Dry run, type `PURGE` in Live confirm, and click Run again.
 
-## 📌 Why this is your own version
-This repo is a refactor and feature-focused version based on similar workflow patterns seen in X bulk-clean scripts. It is designed to be:
-- safer (avoid unliking everything by default),
-- focused on your own quote-style posts,
-- easy to verify with logging, and
-- configurable for keyword/date range filters if you add those.
+## Browser panel
 
-## 🔁 Limitations
-- X markup can change anytime (selectors can break).
-- No built-in undo.
-- Requires an active browser session on your profile.
-- Large timelines may need long runtime due to scrolling and delays.
+Pasting the script into DevTools opens a PurgeX panel instead of immediately scanning the page. The panel includes:
 
-## 🧩 Extension ideas
-- Add keyword whitelist/blacklist.
-- Add date range window (by reading `time[datetime]`).
-- Add options in script root configuration variables.
-- Add a second mode for “likes/unlike” with explicit opt-in.
+- Mode controls: dry run, live confirmation, max actions, account handle, and unfiltered-live override.
+- Action controls: unlike, unretweet, and delete own tweets.
+- Date controls: exact day or start/end date range.
+- Text controls: keywords, excluded keywords, hashtags, and excluded hashtags.
+- Author controls: include authors and exclude authors.
+- Tweet type controls: originals, replies, quotes, and retweets.
+
+The panel writes progress status on the page, while detailed matches and summaries are printed in the browser console.
+
+## Safety defaults
+
+The script defaults to:
+
+```js
+dryRun: true
+liveConfirm: ''
+maxActions: 25
+allowUnfilteredLiveRun: false
+actions: {
+  unlike: false,
+  unretweet: true,
+  deleteOwnTweets: false
+}
+```
+
+Live mode refuses to run unless:
+- `liveConfirm` is exactly `'PURGE'`.
+- at least one action is enabled.
+- at least one filter is active, unless `allowUnfilteredLiveRun` is explicitly set to `true`.
+- `accountHandle` is explicitly set when live deleting own tweets.
+
+## Filtering
+
+The shared filter engine supports:
+
+- `exactDay`: one UTC day, for example `2023-04-01`.
+- `startDate` and `endDate`: date/time range, for example `2023-04-01T00:00:00Z`.
+- `keywords`: include text matches.
+- `excludeKeywords`: reject text matches.
+- `hashtags`: include hashtag matches, with or without `#`.
+- `excludeHashtags`: reject hashtag matches.
+- `includeAuthors`: only match these handles.
+- `excludeAuthors`: reject these handles.
+- `requireAllKeywords`: require every keyword instead of any keyword.
+- `requireAllHashtags`: require every hashtag instead of any hashtag.
+- `tweetTypes`: include or exclude originals, replies, quotes, and retweets.
+
+A tweet must pass all configured filters before any action is considered.
+
+## Example configs
+
+### Dry-run retweets containing a keyword in a date range
+
+```js
+const CONFIG = {
+  dryRun: true,
+  liveConfirm: '',
+  maxActions: 25,
+  stopAfterNoNewTweets: 3,
+  requireExplicitAccountHandleForDelete: true,
+  allowUnfilteredLiveRun: false,
+  accountHandle: '',
+  actions: {
+    unlike: false,
+    unretweet: true,
+    deleteOwnTweets: false
+  },
+  filters: {
+    exactDay: '',
+    startDate: '2023-04-01T00:00:00Z',
+    endDate: '2023-12-31T23:59:59Z',
+    keywords: ['giveaway'],
+    requireAllKeywords: false,
+    excludeKeywords: ['winner announced'],
+    hashtags: [],
+    requireAllHashtags: false,
+    excludeHashtags: [],
+    includeAuthors: [],
+    excludeAuthors: [],
+    tweetTypes: {
+      originals: false,
+      replies: false,
+      quotes: false,
+      retweets: true
+    }
+  }
+};
+```
+
+### Unlike liked posts with a hashtag
+
+Run this from your likes page.
+
+```js
+actions: {
+  unlike: true,
+  unretweet: false,
+  deleteOwnTweets: false
+},
+filters: {
+  exactDay: '',
+  startDate: '',
+  endDate: '',
+  keywords: [],
+  requireAllKeywords: false,
+  excludeKeywords: [],
+  hashtags: ['oldhashtag'],
+  requireAllHashtags: false,
+  excludeHashtags: [],
+  includeAuthors: [],
+  excludeAuthors: [],
+  tweetTypes: {
+    originals: true,
+    replies: true,
+    quotes: true,
+    retweets: true
+  }
+}
+```
+
+### Delete your own tweets with a keyword
+
+Set `accountHandle` explicitly before live delete runs. Live delete refuses to run without it by default.
+
+```js
+dryRun: true,
+liveConfirm: '',
+accountHandle: 'YOUR_USERNAME',
+actions: {
+  unlike: false,
+  unretweet: false,
+  deleteOwnTweets: true
+},
+filters: {
+  exactDay: '',
+  startDate: '2020-01-01T00:00:00Z',
+  endDate: '2020-12-31T23:59:59Z',
+  keywords: ['old phrase'],
+  requireAllKeywords: false,
+  excludeKeywords: [],
+  hashtags: [],
+  requireAllHashtags: false,
+  excludeHashtags: [],
+  includeAuthors: [],
+  excludeAuthors: [],
+  tweetTypes: {
+    originals: true,
+    replies: true,
+    quotes: true,
+    retweets: false
+  }
+}
+```
+
+### Exact-day cleanup
+
+Use `exactDay` when you want one specific UTC day. Leave `startDate` and `endDate` blank.
+
+```js
+filters: {
+  exactDay: '2021-06-15',
+  startDate: '',
+  endDate: '',
+  keywords: ['campaign'],
+  requireAllKeywords: false,
+  excludeKeywords: [],
+  hashtags: [],
+  requireAllHashtags: false,
+  excludeHashtags: [],
+  includeAuthors: [],
+  excludeAuthors: [],
+  tweetTypes: {
+    originals: true,
+    replies: true,
+    quotes: true,
+    retweets: true
+  }
+}
+```
+
+## Action flow
+
+Every visible tweet goes through this flow:
+
+```text
+classify -> filter -> determine eligible actions -> dry-run log -> execute only if live
+```
+
+The console output includes the planned action, author, date, match reasons, tweet URL, and a short text preview. A final summary table reports scanned tweets, matched tweets, planned actions, completed actions, and failed actions.
+
+## Limitations
+
+- X markup can change at any time, which can break selectors.
+- Browser timelines are virtualized, so very old posts may require repeated runs or manual navigation.
+- Deleted tweets, unlikes, and unretweets cannot be undone by this script.
+- The script only sees tweets loaded in the browser as it scrolls.
+- Hashtag matching currently targets standard ASCII hashtags.
