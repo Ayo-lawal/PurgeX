@@ -151,3 +151,28 @@ test('browser panel factory is exported for browser mounting', () => {
 test('visible preview function is exported for browser preview', () => {
   assert.strictEqual(typeof previewVisiblePurgeX, 'function');
 });
+test('builds old tweet search URL from handle dates keywords and hashtags', () => {
+  const url = PurgeXCore.buildSearchUrl({
+    accountHandle: '@owner',
+    since: '2020-01-01',
+    until: '2020-04-01',
+    keywords: ['old phrase', 'promo'],
+    hashtags: ['giveaway'],
+    mode: 'live'
+  }, 'https://x.com');
+
+  const parsed = new URL(url);
+  const query = parsed.searchParams.get('q');
+  assert.strictEqual(parsed.pathname, '/search');
+  assert.strictEqual(parsed.searchParams.get('f'), 'live');
+  assert.ok(query.includes('from:owner'));
+  assert.ok(query.includes('since:2020-01-01'));
+  assert.ok(query.includes('until:2020-04-01'));
+  assert.ok(query.includes('"old phrase"'));
+  assert.ok(query.includes('promo'));
+  assert.ok(query.includes('#giveaway'));
+});
+
+test('search URL builder requires at least one term', () => {
+  assert.throws(() => PurgeXCore.buildSearchUrl({}, 'https://x.com'), /at least one search term/);
+});

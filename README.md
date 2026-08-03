@@ -36,6 +36,7 @@ It can be configured to:
 Pasting the script into DevTools opens a PurgeX panel instead of immediately scanning the page. The panel includes:
 
 - Preview control: scans only currently visible tweets, performs no clicks, and does not auto-scroll.
+- Old Tweet Search controls: builds or opens X search URLs using account handle, date fields, keywords, hashtags, and search mode.
 - Mode controls: dry run, live confirmation, max actions, account handle, and unfiltered-live override.
 - Action controls: unlike, unretweet, and delete own tweets.
 - Date controls: exact day or start/end date range.
@@ -44,6 +45,25 @@ Pasting the script into DevTools opens a PurgeX panel instead of immediately sca
 - Tweet type controls: originals, replies, quotes, and retweets.
 
 The panel writes progress status on the page, while detailed matches and summaries are printed in the browser console. Use Preview visible before Run when tuning filters.
+
+## Old Tweet Search
+
+For older tweets, use the panel's Old Tweet Search controls before cleanup:
+
+1. Enter `accountHandle` for your account when targeting your own old tweets.
+2. Enter an exact day or start/end dates.
+3. Add keywords or hashtags if needed.
+4. Click Build search to inspect the generated X search URL, or Open search to navigate to it.
+5. On the search results page, click Preview visible, then Run with Dry run enabled.
+6. Only run live cleanup after the preview and dry-run output look correct.
+
+Generated search URLs use X search syntax such as:
+
+```text
+from:YOUR_USERNAME since:2020-01-01 until:2020-04-01 "old phrase" #hashtag
+```
+
+This helps X jump closer to old tweets. PurgeX still only acts on tweets that X loads into the browser.
 
 ## Logged-in session and account handle
 

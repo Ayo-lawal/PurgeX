@@ -192,6 +192,23 @@ const PurgeXCore = (() => {
     }
   };
 
+  const buildSearchUrl = (options = {}, origin = 'https://x.com') => {
+    const handle = normalizeHandle(options.accountHandle || options.handle);
+    const terms = [];
+    if (handle) terms.push(`from:${handle}`);
+    if (options.since) terms.push(`since:${String(options.since).trim()}`);
+    if (options.until) terms.push(`until:${String(options.until).trim()}`);
+    for (const keyword of normalizeTextList(options.keywords || [])) {
+      terms.push(keyword.includes(' ') ? `"${keyword}"` : keyword);
+    }
+    for (const tag of normalizeHashtags(options.hashtags || [])) {
+      terms.push(`#${tag}`);
+    }
+    const query = terms.join(' ').trim();
+    if (!query) throw new Error('Add at least one search term, handle, date, keyword, or hashtag.');
+    const mode = ['live', 'top', 'user'].includes(options.mode) ? options.mode : 'live';
+    return `${origin}/search?q=${encodeURIComponent(query)}&src=typed_query&f=${mode}`;
+  };
   const filterReasons = (info, normalized) => {
     const config = normalized.raw;
     const reasons = [];
@@ -217,6 +234,7 @@ const PurgeXCore = (() => {
     eligibleActions,
     validateConfig,
     hasActiveFilter,
+    buildSearchUrl,
     filterReasons
   };
 })();
@@ -567,7 +585,7 @@ function mountPurgeXPanel(defaultConfig = PurgeXCore.DEFAULT_CONFIG) {
       #purgex-panel legend { padding: 0 5px; font-weight: 700; }
       #purgex-panel label { display: block; margin: 7px 0; }
       #purgex-panel .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      #purgex-panel input[type="text"], #purgex-panel input[type="date"], #purgex-panel input[type="number"] { width: 100%; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+      #purgex-panel input[type="text"], #purgex-panel input[type="date"], #purgex-panel input[type="number"], #purgex-panel select { width: 100%; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
       #purgex-panel .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
       #purgex-panel .inline { display: flex; align-items: center; gap: 7px; }
       #purgex-panel .inline input { margin: 0; }
@@ -585,6 +603,12 @@ function mountPurgeXPanel(defaultConfig = PurgeXCore.DEFAULT_CONFIG) {
         <div class="row"><label>Max actions <input id="purgex-max-actions" type="number" min="1" value="25"></label><label>Account handle <input id="purgex-account" type="text" placeholder="your_handle"></label></div>
         <label class="inline"><input id="purgex-unfiltered" type="checkbox"> Allow unfiltered live run</label>
         <p class="note">Live mode requires PURGE and refuses delete without an explicit account handle.</p>
+      </fieldset>
+      <fieldset><legend>Old Tweet Search</legend>
+        <label>Search mode <select id="purgex-search-mode"><option value="live">Latest</option><option value="top">Top</option><option value="user">People</option></select></label>
+        <div class="actions-row"><button type="button" id="purgex-build-search">Build search</button><button type="button" id="purgex-open-search">Open search</button></div>
+        <label>Search URL <input id="purgex-search-url" type="text" readonly></label>
+        <p class="note">Use this to jump closer to old tweets before previewing or running cleanup.</p>
       </fieldset>
       <fieldset><legend>Actions</legend><div class="check-grid">
         <label class="inline"><input id="purgex-unlike" type="checkbox"> Unlike</label>
@@ -645,6 +669,18 @@ function mountPurgeXPanel(defaultConfig = PurgeXCore.DEFAULT_CONFIG) {
     document.getElementById('purgex-type-retweets').checked = !!config.filters.tweetTypes.retweets;
   };
 
+  const buildSearchFromForm = () => {
+    const searchUrl = PurgeXCore.buildSearchUrl({
+      accountHandle: value('purgex-account'),
+      since: value('purgex-exact-day') || value('purgex-start-date').slice(0, 10),
+      until: value('purgex-exact-day') || value('purgex-end-date').slice(0, 10),
+      keywords: parseList(value('purgex-keywords')),
+      hashtags: parseList(value('purgex-hashtags')),
+      mode: value('purgex-search-mode')
+    }, window.location.origin);
+    document.getElementById('purgex-search-url').value = searchUrl;
+    return searchUrl;
+  };
   const fromForm = () => ({
     dryRun: checked('purgex-dry-run'),
     liveConfirm: value('purgex-live-confirm'),
@@ -666,6 +702,27 @@ function mountPurgeXPanel(defaultConfig = PurgeXCore.DEFAULT_CONFIG) {
   toForm(defaultConfig);
   document.getElementById('purgex-close').addEventListener('click', () => panel.remove());
   document.getElementById('purgex-reset').addEventListener('click', () => toForm(PurgeXCore.DEFAULT_CONFIG));
+  document.getElementById('purgex-build-search').addEventListener('click', () => {
+    const status = document.getElementById('purgex-status');
+    try {
+      const searchUrl = buildSearchFromForm();
+      status.textContent = 'Search URL built. Open it, then preview visible tweets.';
+      console.log('PurgeX search URL:', searchUrl);
+    } catch (error) {
+      status.textContent = error.message;
+      console.error('PurgeX search build failed:', error);
+    }
+  });
+  document.getElementById('purgex-open-search').addEventListener('click', () => {
+    const status = document.getElementById('purgex-status');
+    try {
+      const searchUrl = buildSearchFromForm();
+      window.location.assign(searchUrl);
+    } catch (error) {
+      status.textContent = error.message;
+      console.error('PurgeX search open failed:', error);
+    }
+  });
   document.getElementById('purgex-preview').addEventListener('click', async () => {
     const status = document.getElementById('purgex-status');
     status.textContent = 'Previewing visible tweets. Watch the console.';
