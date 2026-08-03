@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { PurgeXCore, mountPurgeXPanel } = require('../unretweet-delete-quote.js');
+const { PurgeXCore, previewVisiblePurgeX, mountPurgeXPanel } = require('../unretweet-delete-quote.js');
 
 const normalize = (overrides, inferredHandle = 'owner') => PurgeXCore.normalizeConfig(overrides, inferredHandle);
 
@@ -147,4 +147,7 @@ test('live mode rejects unfiltered broad runs', () => {
 
 test('browser panel factory is exported for browser mounting', () => {
   assert.strictEqual(typeof mountPurgeXPanel, 'function');
+});
+test('visible preview function is exported for browser preview', () => {
+  assert.strictEqual(typeof previewVisiblePurgeX, 'function');
 });

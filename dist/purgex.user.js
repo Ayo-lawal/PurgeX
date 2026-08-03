@@ -1,3 +1,13 @@
+// ==UserScript==
+// @name         PurgeX Timeline Cleaner
+// @namespace    https://local.purgex
+// @version      0.1.0
+// @description  Open the PurgeX cleanup panel on X/Twitter timelines.
+// @match        https://x.com/*
+// @match        https://twitter.com/*
+// @grant        none
+// ==/UserScript==
+
 // PurgeX timeline action script.
 // Usage: open x.com/twitter.com, sign in, open the target timeline, edit CONFIG, then run in DevTools Console.
 

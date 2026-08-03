@@ -27,14 +27,15 @@ It can be configured to:
 4. Paste the script into the console and press Enter.
 5. Use the PurgeX panel that appears in the top-right of the page.
 6. Choose actions, filters, max actions, and account handle if deleting.
-7. Click Run with Dry run enabled first.
-8. Review the dry-run console tables.
+7. Click Preview visible to inspect currently loaded tweets without scrolling.
+8. Click Run with Dry run enabled for the full scrolling pass, then review the console tables.
 9. Only after the matches look correct, uncheck Dry run, type `PURGE` in Live confirm, and click Run again.
 
 ## Browser panel
 
 Pasting the script into DevTools opens a PurgeX panel instead of immediately scanning the page. The panel includes:
 
+- Preview control: scans only currently visible tweets, performs no clicks, and does not auto-scroll.
 - Mode controls: dry run, live confirmation, max actions, account handle, and unfiltered-live override.
 - Action controls: unlike, unretweet, and delete own tweets.
 - Date controls: exact day or start/end date range.
@@ -42,7 +43,7 @@ Pasting the script into DevTools opens a PurgeX panel instead of immediately sca
 - Author controls: include authors and exclude authors.
 - Tweet type controls: originals, replies, quotes, and retweets.
 
-The panel writes progress status on the page, while detailed matches and summaries are printed in the browser console.
+The panel writes progress status on the page, while detailed matches and summaries are printed in the browser console. Use Preview visible before Run when tuning filters.
 
 ## Safety defaults
 
@@ -225,6 +226,40 @@ classify -> filter -> determine eligible actions -> dry-run log -> execute only 
 
 The console output includes the planned action, author, date, match reasons, tweet URL, and a short text preview. A final summary table reports scanned tweets, matched tweets, planned actions, completed actions, and failed actions.
 
+## Browser packages
+
+Generate browser-friendly package files with:
+
+```powershell
+node tools\build-browser-packages.js
+```
+
+This creates:
+
+- `dist/purgex-bookmarklet.txt`: bookmarklet text for quick panel mounting. This may be too large for some browsers.
+- `dist/purgex.user.js`: userscript wrapper for script managers that support user scripts.
+
+The console-paste and userscript workflows are more reliable than the bookmarklet for this script size. Regenerate these files after changing `unretweet-delete-quote.js`.
+
+## Verification
+
+Run the pure filter/action tests with. These tests cover the shared core used by both the browser panel and the cleanup runner:
+
+```powershell
+node tests\purgex-core.test.js
+```
+
+Build browser package artifacts with:
+
+```powershell
+node tools\build-browser-packages.js
+```
+
+Run a syntax check with:
+
+```powershell
+node --check unretweet-delete-quote.js
+```
 ## Limitations
 
 - X markup can change at any time, which can break selectors.
